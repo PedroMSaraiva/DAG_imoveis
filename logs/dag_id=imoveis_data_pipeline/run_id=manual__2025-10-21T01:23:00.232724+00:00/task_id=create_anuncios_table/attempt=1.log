@@ -1,0 +1,11 @@
+{"timestamp":"2025-10-21T01:23:01.579740Z","level":"info","event":"DAG bundles loaded: dags-folder, example_dags","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2025-10-21T01:23:01.580089Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/insercao_dados.py","logger":"airflow.models.dagbag.DagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2025-10-21T01:23:01.632521Z","level":"info","event":"Task instance is in running state","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.632627Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.QUEUED","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.632744Z","level":"info","event":"Current task name:create_anuncios_table","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.632792Z","level":"info","event":"Dag name:imoveis_data_pipeline","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.632914Z","level":"info","event":"Executing: CREATE TABLE IF NOT EXISTS anuncios (\n            id_imovel VARCHAR(36) PRIMARY KEY,\n            id_anuncio BIGINT,\n            url TEXT,\n            imagens TEXT,\n            titulo TEXT,\n            descricao TEXT\n        );","logger":"airflow.task.operators.airflow.providers.common.sql.operators.sql.SQLExecuteQueryOperator","filename":"sql.py","lineno":309}
+{"timestamp":"2025-10-21T01:23:01.648238Z","level":"info","event":"Running statement: CREATE TABLE IF NOT EXISTS anuncios (\n            id_imovel VARCHAR(36) PRIMARY KEY,\n            id_anuncio BIGINT,\n            url TEXT,\n            imagens TEXT,\n            titulo TEXT,\n            descricao TEXT\n        );, parameters: None","logger":"airflow.task.hooks.airflow.providers.postgres.hooks.postgres.PostgresHook","filename":"sql.py","lineno":810}
+{"timestamp":"2025-10-21T01:23:01.662916Z","level":"info","event":"Task instance in success state","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.663021Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.RUNNING","logger":"task.stdout"}
+{"timestamp":"2025-10-21T01:23:01.663179Z","level":"info","event":"Task operator:<Task(SQLExecuteQueryOperator): create_anuncios_table>","logger":"task.stdout"}
