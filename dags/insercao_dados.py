@@ -37,7 +37,7 @@ DAGS_FOLDER = os.environ.get('AIRFLOW_HOME', '/opt/airflow') + '/dags'
 
 def ProcessDataPipeline():
     
-    conn_id = "anuncios_pg_conn"
+    conn_id = "tutorial_pg_conn"
 
     create_anuncios_table = SQLExecuteQueryOperator(
         task_id="create_anuncios_table",

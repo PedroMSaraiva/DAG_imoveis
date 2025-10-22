@@ -7,5 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "loguru",
     "pandas",
-    "openpyxl",  # Para ler arquivos Excel
+    "openpyxl",  
+    "Pillow",
+    selenium webdriver-manager,  # Para ler arquivos Excel
 ]
