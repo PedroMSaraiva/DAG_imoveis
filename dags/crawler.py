@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import pendulum
+import time
 
 from airflow.sdk import task, dag
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -13,6 +14,8 @@ from PIL import Image, ImageEnhance, ImageFilter
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 
 
@@ -21,7 +24,7 @@ default_args = {
     "owner": "airflow",
     "start_date": datetime(2025, 10, 22),
     "retries": 1,
-    "retry_delay": timedelta(minutes=1),
+    "retry_delay": timedelta(minutes=0.1),
 }
 
 @dag(
@@ -36,7 +39,6 @@ default_args = {
 def crawl_pipenline():
 
     conn_id = "tutorial_pg_conn"
-
     
     log = LoggingMixin().log
 
@@ -63,13 +65,42 @@ def crawl_pipenline():
                 method='multi',       # Inserção em lote para melhor performance
                 chunksize=1000       # Processar em lotes de 1000 registros
             )
+        
+    def selenium(url, driver):
+        try:
+            driver.get(url)
+
+            time.sleep(2)
+
+            html = driver.page_source   
+            titulo = driver.title
+
+            for tag in ["h1", "h2", "h3"]:
+                headers = [el.text for el in driver.find_elements(By.TAG_NAME, tag) if el.text.strip()]
+                if headers:
+                    log.info(f"\n{tag.upper()} encontrados:")
+                    for h in headers:
+                        log.info("-", h)
+
+            log.info(f"Título da página: {titulo}\n")
+            log.info(html[:1000]) 
+        finally:
+            driver.quit()
+
+        return html
+        
 
 
     @task
     def crawl_sites():
+        options = Options()
+        options.add_argument("--headless")  # executa sem abrir janela do navegador
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+
         resultados = get_data_postgress("SELECT url FROM anuncios;")
         service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service)
+        driver = webdriver.Chrome(service=service, options=options)
 
 
         for site in resultados:
@@ -77,12 +108,7 @@ def crawl_pipenline():
             if not url.startswith("http"):
                 url = "http://" + url
 
-            try:
-                driver.get(url)
-                html = driver.page_source  
-                print(html[:1000])  
-            finally:
-                driver.quit()
+            html = selenium(url, driver)
 
             soup = BeautifulSoup(html, "html.parser")
 
