@@ -96,6 +96,16 @@ Servidor:
 - Se aparecer **"Conectado"**, está tudo certo!
 - Clique em **"OK"** para salvar
 
+## ▶️ Executar Web Scrapping
+
+1. Abra a interface do Airflow e encontre o DAG `crawler_pipeline` na lista.
+2. Rode o **Trigger** como foi feito no DAG anterior.
+3. Essa tarefa pode demorar um tempo (20 minutos) devido ao scrapping.
+
+# Foram criadas 2 tabelas novas no Postgres
+
+Utilize o DBeaver para visualizar as novas tabelas, que apresentam metadados extras para o treinamento do modelo.
+
 ## 📊 Estrutura dos Dados
 
 ### Tabela `anuncios`:
@@ -111,6 +121,11 @@ Servidor:
 - `pontuacao_total`: Pontuação total da análise
 - `padrao`: Classificação do padrão (A, B, C)
 - E mais 37 campos de características e benfeitorias
+
+### Tabela `anuncios_coletados`:
+- `scrapping`: Metadados extraidos pelo scrapping da página web
+- `url`: Url da página que foi feito o scrapping
+- `images`: Imagens preprocessadas antes de serem introduzidas ao modelo
 
 ## 🛠️ Tecnologias Utilizadas
 

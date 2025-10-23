@@ -16,6 +16,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from io import BytesIO
+from urllib.parse import quote
 
 
 
@@ -23,7 +25,7 @@ from selenium.webdriver.common.by import By
 default_args = {
     "owner": "airflow",
     "start_date": datetime(2025, 10, 22),
-    "retries": 1,
+    "retries": 0,
     "retry_delay": timedelta(minutes=0.1),
 }
 
@@ -43,21 +45,29 @@ def crawl_pipenline():
     log = LoggingMixin().log
 
 
-    def get_data_postgress(slq_code : str):
+    def image_to_bytes(img):
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG")
+        return buffer.getvalue()
+
+
+    def get_data_postgress(query : str):
         postgres_hook = PostgresHook(postgres_conn_id=conn_id)
-        conn = postgres_hook.get_conn()
-        cursor = conn.cursor()
+        engine = postgres_hook.get_sqlalchemy_engine()
 
-        cursor.execute(slq_code)
-        resultados = cursor.fetchall()
-
-        return resultados
+        return pd.read_sql(query, engine)
     
 
     def post_data_postgress(data, table_name : str):
         postgres_hook = PostgresHook(postgres_conn_id=conn_id)
         engine = postgres_hook.get_sqlalchemy_engine()
-        data.to_sql(
+
+        if isinstance(data, list):
+            df = pd.DataFrame(data)
+        else:
+            df = data
+
+        df.to_sql(
                 name=table_name,
                 con=engine,
                 if_exists='replace',  # Substitui a tabela se existir
@@ -66,87 +76,105 @@ def crawl_pipenline():
                 chunksize=1000       # Processar em lotes de 1000 registros
             )
         
-    def selenium(url, driver):
-        try:
+
+    def selenium(url):
+        options = Options()
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                            "Chrome/120.0.0.0 Safari/537.36")
+        
+        driver = webdriver.Remote(
+                command_executor="http://chrome:4444/wd/hub",
+                options=options
+        )  
+
+        try: 
             driver.get(url)
 
-            time.sleep(2)
+            time.sleep(1)
 
             html = driver.page_source   
             titulo = driver.title
 
+            url_info = []
+
             for tag in ["h1", "h2", "h3"]:
                 headers = [el.text for el in driver.find_elements(By.TAG_NAME, tag) if el.text.strip()]
                 if headers:
-                    log.info(f"\n{tag.upper()} encontrados:")
                     for h in headers:
-                        log.info("-", h)
-
-            log.info(f"Título da página: {titulo}\n")
-            log.info(html[:1000]) 
+                        url_info.append(h) 
         finally:
-            driver.quit()
+            driver.quit()  
 
-        return html
-        
+        return url_info
+    
+
+    def image_extraction(images):
+        img_list = []
+    
+
+        for item in images:
+            item = item.strip("{}")
+            images_extracted = [u.strip() for u in item.split(',')]
+
+            for url in images_extracted:
+                response = requests.get(url, timeout=10)
+
+                try:
+                    with Image.open(BytesIO(response.content)) as img:
+                        img = img.convert("RGB")
+                        img = img.resize((224, 224))
+                        img = ImageEnhance.Contrast(img).enhance(1.1)
+                        img = ImageEnhance.Brightness(img).enhance(1.05)
+                        img = img.filter(ImageFilter.SHARPEN)
+                        img = image_to_bytes(img)
+                        img_list.append(img)
+                except Exception as e:
+                    log.error(f"PIL não conseguiu identificar imagem: {response.content}")
+                    placeholder = Image.new("RGB", (224, 224), color=(0, 0, 0))
+                    placeholder = image_to_bytes(placeholder)
+                    img_list.append(placeholder)
+                    continue
+
+       
+        return img_list
 
 
     @task
     def crawl_sites():
-        options = Options()
-        options.add_argument("--headless")  # executa sem abrir janela do navegador
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
+        df = get_data_postgress("""
+            SELECT url, titulo, descricao, imagens
+            FROM anuncios;
+        """)
 
-        resultados = get_data_postgress("SELECT url FROM anuncios;")
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
+        urls = df["url"].tolist()
+        titulos = df["titulo"].tolist()
+        descricoes = df["descricao"].tolist()
+        imagens = df["imagens"].tolist() 
 
+        i = 0 
 
-        for site in resultados:
-            url = site[0]
+        data = []
+
+        image_list = image_extraction(imagens)
+
+        for url in urls:
             if not url.startswith("http"):
                 url = "http://" + url
 
-            html = selenium(url, driver)
+            html = selenium(url)
 
-            soup = BeautifulSoup(html, "html.parser")
+            data.append({"titulo": titulos[i], "description": descricoes[i], "scrapping": html, "url": url, "images": image_list[i]})
 
-            log.info(f"Dados extraidos com o soup: {soup}")
+            i =+ 1
 
-            data = []
-            """for item in soup.select(".card-imovel"):
-                titulo = item.select_one(".titulo").text.strip()
-                preco = item.select_one(".preco").text.strip()
-                data.append({"titulo": titulo, "preco": preco})
-                
-                post_data_postgress(data, "anuncios_coletados")"""
-
-           
-    @task
-    def image_extraction():
-        resultados_consulta = get_data_postgress("SELECT imagens FROM anuncios;")
-
-        for img_path in resultados_consulta:
-            with Image.open(img_path[0]) as img:
-                # Converte para RGB (garante 3 canais)
-                img = img.convert("RGB")
-
-                # Redimensiona para 224x224
-                img = img.resize((224, 224))
-
-                # Melhora contraste e brilho (ajuste leve)
-                img = ImageEnhance.Contrast(img).enhance(1.1)
-                img = ImageEnhance.Brightness(img).enhance(1.05)
-
-                # Filtro leve de nitidez
-                img = img.filter(ImageFilter.SHARPEN)
-
-                # post_data_postgress(data, "anuncios_coletados")
-    
-
-    crawl_sites() >> image_extraction()
+        post_data_postgress(data, "anuncios_coletados")
 
 
+    crawl_sites()
 
 dag = crawl_pipenline()

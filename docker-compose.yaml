@@ -333,5 +333,15 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  chrome:
+    image: selenium/standalone-chrome:latest
+    shm_size: 2gb  # importante para evitar crash de memória
+    ports:
+      - "4444:4444"  # porta do Selenium Grid
+    environment:
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=300
+    restart: always
+
 volumes:
   postgres-db-volume:
