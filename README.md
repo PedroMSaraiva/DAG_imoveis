@@ -135,7 +135,7 @@ Utilize o DBeaver para visualizar as novas tabelas, que apresentam metadados ext
 - **Pandas**: Processamento de dados
 - **Python**: Linguagem de programação
 
-## 📝 Comandos Úteis
+## 📝 Comandos Úteis:
 
 ```bash
 # Parar todos os serviços
