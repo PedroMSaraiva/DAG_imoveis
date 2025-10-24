@@ -98,13 +98,27 @@ Servidor:
 
 ## ▶️ Executar Web Scrapping
 
+Ele automatiza um processo de web scraping e enriquecimento de imagens, salvando os resultados em um banco PostgreSQL.
+Utiliza Selenium para capturar conteúdo HTML, Pandas para manipular dados e PIL para pré-processamento de imagens.
+
 1. Abra a interface do Airflow e encontre o DAG `crawler_pipeline` na lista.
 2. Rode o **Trigger** como foi feito no DAG anterior.
 3. Essa tarefa pode demorar um tempo (20 minutos) devido ao scrapping.
 
-# Foram criadas 2 tabelas novas no Postgres
+Cria 1 tabelas novas no Postgres
+
+Chamada de "anuncios_coletados" a nossa tabela Silver
 
 Utilize o DBeaver para visualizar as novas tabelas, que apresentam metadados extras para o treinamento do modelo.
+
+# 
+
+É necessário entrar dentro do container e baixar a o torch de maneira manual
+
+docker exec -it dag_imoveis-airflow-scheduler-1 bash    
+
+pip install torch torchvision timm
+
 
 ## 📊 Estrutura dos Dados
 

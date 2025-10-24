@@ -343,5 +343,9 @@ services:
       - SE_NODE_SESSION_TIMEOUT=300
     restart: always
 
+  custom:
+    build:
+      context: .
+
 volumes:
   postgres-db-volume:

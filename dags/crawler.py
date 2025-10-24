@@ -9,7 +9,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.models import Variable
 from airflow.utils.log.logging_mixin import LoggingMixin
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+
 from PIL import Image, ImageEnhance, ImageFilter
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -134,7 +134,7 @@ def crawl_pipenline():
                         img = image_to_bytes(img)
                         img_list.append(img)
                 except Exception as e:
-                    log.error(f"PIL não conseguiu identificar imagem: {response.content}")
+                    log.warning(f"PIL não conseguiu identificar imagem: {response.content}")
                     placeholder = Image.new("RGB", (224, 224), color=(0, 0, 0))
                     placeholder = image_to_bytes(placeholder)
                     img_list.append(placeholder)
@@ -156,21 +156,23 @@ def crawl_pipenline():
         descricoes = df["descricao"].tolist()
         imagens = df["imagens"].tolist() 
 
-        i = 0 
-
         data = []
 
         image_list = image_extraction(imagens)
 
-        for url in urls:
+        for url, titulo, descricao, img in zip(urls, titulos, descricoes, image_list):
             if not url.startswith("http"):
                 url = "http://" + url
 
-            html = selenium(url)
+            html = selenium(url)  # executa o scraping para essa URL específica
 
-            data.append({"titulo": titulos[i], "description": descricoes[i], "scrapping": html, "url": url, "images": image_list[i]})
-
-            i =+ 1
+            data.append({
+                "titulo": titulo,
+                "description": descricao,
+                "scrapping": html,
+                "url": url,
+                "images": img
+            })
 
         post_data_postgress(data, "anuncios_coletados")
 

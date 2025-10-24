@@ -9,5 +9,6 @@ dependencies = [
     "pandas",
     "openpyxl",  
     "Pillow",
-    selenium webdriver-manager,  # Para ler arquivos Excel
+    selenium webdriver-manager, 
+    torch,  # Para ler arquivos Excel
 ]
