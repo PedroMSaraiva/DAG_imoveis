@@ -110,14 +110,25 @@ Cria 1 tabelas novas no Postgres
 Chamada de "anuncios_coletados" a nossa tabela Silver
 
 Utilize o DBeaver para visualizar as novas tabelas, que apresentam metadados extras para o treinamento do modelo.
+![1761421425587](image/README/1761421425587.png)
 
-# 
+Vocẽ tera uma tabale como essa apos o scrapping!
 
-É necessário entrar dentro do container e baixar a o torch de maneira manual
+## Executar a inferencia de IA
 
-docker exec -it dag_imoveis-airflow-scheduler-1 bash    
+**NOTA**: Verifique se você tem a pasta `data` criada, se não houver, execute `mkdir -p data/`
 
-pip install torch torchvision timm
+Vamos utilizar as vLLM Gemini da Google, para isso, vamos configurar a `GEMINI_API_KEY`. 
+
+Entre na UI do Airflow, em Admin -> Variables -> `+` -> Adicione `GEMINI_API_KEY` e a sua chave da Google, apos isso, vá no pipeline `inferencia_ai_pipeline` e execute.
+
+Você tera algo como:
+![1761421609762](image/README/1761421609762.png)
+
+Apos isso, você terá na pasta `/data` um csv com a classificação gerado pelo Gemini e a sua respectiva pontuação calculada.
+
+> Em experiencias anterioes, testeamos o TIMM, um loader de modelos de visão, entretanto o desempenho foi pessimo, como é possivel ver no kaggle. Com experiencias de projetos CEIA por parte da nossa equipe, optamos pelo uso do Gemini, dado que é um modelo robusto, uso gratuito(apesar de limitado) e não colocamos penso em cima do nosso pipeline do Airflow. 
+> Tentemos utilizar o pytorch antes, mas ele era muito pensado, então o gemini foi uma boa saida para tirar o peso computacional.
 
 
 ## 📊 Estrutura dos Dados
