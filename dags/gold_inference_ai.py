@@ -10,9 +10,10 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.models import Variable
 from datetime import datetime, timedelta
 from airflow.sdk import task, dag
-#from dotenv import load_dotenv
+from loguru import logger as logging
+from dotenv import load_dotenv
 
-#load_dotenv()   
+load_dotenv()   
 
 default_args = {
     "owner": "airflow",
@@ -74,7 +75,7 @@ def multimodal_ai():
             img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             return img_base64
         except Exception as e:
-            print(f"Erro ao processar imagem: {e}")
+            logging.error(f"Erro ao processar imagem: {e}")
             return None
 
 
@@ -166,7 +167,7 @@ def multimodal_ai():
                     })
                 
             except Exception as e:
-                print(f"Erro ao processar linha: {e}")
+                logging.error(f"Erro ao processar linha: {e}")
                 classifications.append({
                     "classification": f"Erro: {str(e)[:100]}",
                     "confidence": 0.0,
@@ -192,7 +193,7 @@ def multimodal_ai():
         3. Classifica imagens com Gemini
         4. Retorna DataFrame enriquecido
         """
-        print("🔹 Iniciando pipeline com Gemini...")
+        logging.info("🔹 Iniciando pipeline com Gemini...")
 
         # Busca dados do PostgreSQL
         df = get_data_postgres("""
@@ -201,32 +202,32 @@ def multimodal_ai():
         """)
 
         if df.empty:
-            print("⚠️ Nenhum dado encontrado na tabela.")
+            logging.error("⚠️ Nenhum dado encontrado na tabela.")
             return
 
-        print(f"✅ {len(df)} registros carregados do banco.")
+        logging.info(f"✅ {len(df)} registros carregados do banco.")
 
         # Configuração da API do Gemini
         api_key = get_gemini_api_key()
         
         if not api_key:
-            print("⚠️ API key do Gemini não configurada!")
-            print("Configure uma das opções:")
-            print("1. Variável de ambiente: export GEMINI_API_KEY='sua_key'")
-            print("2. Airflow Variable: airflow variables set gemini_api_key 'sua_key'")
+            logging.error("⚠️ API key do Gemini não configurada!")
+            logging.error("Configure uma das opções:")
+            logging.error("1. Variável de ambiente: export GEMINI_API_KEY='sua_key'")
+            logging.error("2. Airflow Variable: airflow variables set gemini_api_key 'sua_key'")
             return
 
-        print("🧠 Classificando imagens com Gemini...")
+        logging.info("🧠 Classificando imagens com Gemini...")
         df_classified = classify_images_with_gemini(None, df, api_key)
 
         # Mostra resultados
-        print("\n📊 Resultados da classificação:")
-        print(df_classified[["titulo", "property_type", "estimated_value", "gemini_confidence"]].head())
+        logging.info("\n📊 Resultados da classificação:")
+        logging.info(df_classified[["titulo", "property_type", "estimated_value", "gemini_confidence"]].head())
 
-        print("✅ Pipeline finalizado com sucesso.")
+        logging.info("✅ Pipeline finalizado com sucesso.")
         
         # Salva resultados
         df_classified.to_csv("classificacoes_gemini.csv", index=False)
-        print("💾 Resultados salvos em 'classificacoes_gemini.csv'")
+        logging.info("💾 Resultados salvos em 'classificacoes_gemini.csv'")
 
-    run_pipeline()
+dag = multimodal_ai()
