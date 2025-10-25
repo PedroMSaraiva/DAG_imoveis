@@ -139,7 +139,7 @@ Apos isso, você terá na pasta `/data` um csv com a classificação gerado pelo
 - `url`: URL do anúncio
 - `imagens`: URLs das imagens
 - `titulo`: Título do anúncio
-- `descricao`: Descrição detalhada
+- `descricao`: Descrição detalhadaW
 
 ### Tabela `analise`:
 - `link`: Link do imóvel
@@ -148,6 +148,8 @@ Apos isso, você terá na pasta `/data` um csv com a classificação gerado pelo
 - E mais 37 campos de características e benfeitorias
 
 ### Tabela `anuncios_coletados`:
+- `titulo`: Titulo do anuncios
+- `description`: Descrição do anuncios
 - `scrapping`: Metadados extraidos pelo scrapping da página web
 - `url`: Url da página que foi feito o scrapping
 - `images`: Imagens preprocessadas antes de serem introduzidas ao modelo
