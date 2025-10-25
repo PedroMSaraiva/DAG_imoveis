@@ -9,6 +9,8 @@ dependencies = [
     "pandas",
     "openpyxl",  
     "Pillow",
-    selenium webdriver-manager, 
-    torch,  # Para ler arquivos Excel
+    "selenium",
+    "webdriver-manager", 
+    "google-generativeai",  # Para API do Gemini
+    "python-dotenv",
 ]

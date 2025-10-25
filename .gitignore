@@ -1,3 +1,5 @@
 /logs 
 *logs
 /logs/dag=id
+.env
+**__pycache__**
