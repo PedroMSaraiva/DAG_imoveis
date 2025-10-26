@@ -125,6 +125,8 @@ def crawl_pipenline():
                 response = requests.get(url, timeout=10)
 
                 try:
+                    content_type = response.headers.get("Content-Type", "").lower()
+                    #log.info(f"Tipo de conteúdo: {content_type}")
                     with Image.open(BytesIO(response.content)) as img:
                         img = img.convert("RGB")
                         img = img.resize((224, 224))

@@ -139,6 +139,8 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    env_file: 
+    - .env
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -363,10 +365,6 @@ services:
       - SE_NODE_MAX_SESSIONS=5
       - SE_NODE_SESSION_TIMEOUT=300
     restart: always
-
-  custom:
-    build:
-      context: .
 
 volumes:
   postgres-db-volume:

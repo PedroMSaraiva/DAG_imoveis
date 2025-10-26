@@ -61,6 +61,24 @@ def multimodal_ai():
         engine = postgres_hook.get_sqlalchemy_engine()
         logging.info("Conexão PostgreSQL estabelecida com sucesso.")
         return pd.read_sql(query, engine)
+    
+    def post_data_postgress(data, table_name : str, conn_id: str = "tutorial_pg_conn"):
+        postgres_hook = PostgresHook(postgres_conn_id=conn_id)
+        engine = postgres_hook.get_sqlalchemy_engine()
+
+        if isinstance(data, list):
+            df = pd.DataFrame(data)
+        else:
+            df = data
+
+        df.to_sql(
+                name=table_name,
+                con=engine,
+                if_exists='replace',  # Substitui a tabela se existir
+                index=False,          # Não incluir índice do pandas
+                method='multi',       # Inserção em lote para melhor performance
+                chunksize=1000       # Processar em lotes de 1000 registros
+            )
 
 
     def configure_gemini_api(api_key: str):
@@ -462,6 +480,8 @@ def multimodal_ai():
         output_path = os.path.join(output_dir, "classificacoes_gemini_com_pontuacao.csv")
         df_with_scores.to_csv(output_path, index=False)
         logging.info(f"💾 Resultados salvos em '{output_path}'")
+
+        post_data_postgress(df_with_scores, "anuncios_resultados")
         
         return df_with_scores
 
